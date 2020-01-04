@@ -19,3 +19,12 @@ class AudioController:
             raise Exception("invalid volume level")
         self.volume.SetMasterVolumeLevelScalar(level / self.PERCENT_FACTOR, None)
 
+    def mute(self):
+        self.volume.SetMute(1, None)
+
+    def unmute(self):
+        self.volume.SetMute(0, None)
+
+    def is_muted(self):
+        return self.volume.GetMute() == 1
+

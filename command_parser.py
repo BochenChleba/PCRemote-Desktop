@@ -1,2 +1,0 @@
-def xd():
-    print("xd")

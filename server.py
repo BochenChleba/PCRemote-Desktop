@@ -3,16 +3,17 @@ import socket
 from constants import Constants
 from serializer import Serializer
 from communicator import Communicator
+from message import Message
 from windows_commands import WindowsCommands
 from audio_controller import AudioController
+from mouse_controller import MouseController
 import os
 
 
 class Server:
-    INTERNAL_COMMAND_SET_SHUTDOWN_TIMEOUT = False
-    INTERNAL_COMMAND_SET_VOLUME_LEVEL = False
     audio_controller = AudioController()
     communicator = Communicator()
+    mouse_controller = MouseController()
 
     def __init__(self):
         self.connection = self.init_connection()
@@ -29,8 +30,9 @@ class Server:
         self.start_listen()
         try:
             while True:
-                command = self.communicator.receive_command()
-                self.parse_command(command)
+                message_str = self.communicator.receive_message()
+                message = Message.from_string(message_str)
+                self.read_message(message)
         except (ConnectionResetError, ConnectionAbortedError, TimeoutError) as e:
             self.handle_communication_error(e)
 
@@ -40,74 +42,100 @@ class Server:
         self.communicator.set_client_socket(client_socket)
         print("waiting for data...")
 
-    def parse_command(self, command):
-        if not command:
-            print('no data, restarting...')
-            raise ConnectionAbortedError
-
-        elif self.INTERNAL_COMMAND_SET_SHUTDOWN_TIMEOUT:
-            params = Serializer.deserialize_params(command)
-            if len(params) == 1:
-                os.system(WindowsCommands.SHUTDOWN_ABORT)
-                os.system(WindowsCommands.SCHEDULE_SHUTDOWN + params[0])
-                self.communicator.send_successful_response()
-            else:
-                self.communicator.send_unsuccessful_response()
-            self.INTERNAL_COMMAND_SET_SHUTDOWN_TIMEOUT = False
-
-        elif self.INTERNAL_COMMAND_SET_VOLUME_LEVEL:
-            params = Serializer.deserialize_params(command)
-            if len(params) == 1:
-                level = int(params[0])
-                self.audio_controller.set_volume(level)
-                self.communicator.send_successful_response()
-            else:
-                self.communicator.send_unsuccessful_response()
-            self.INTERNAL_COMMAND_SET_VOLUME_LEVEL = False
-
-        elif command == Constants.COMMAND_PING:
-            print("ping")
-            self.communicator.send_successful_response([Constants.FEEDBACK_PONG])
-
-        elif command == Constants.COMMAND_SHUTDOWN_NOW:
-            print("shut system down")
-            self.communicator.send_successful_response([])
-            os.system(WindowsCommands.SHUTDOWN_NOW)
-
-        elif command == Constants.COMMAND_SCHEDULED_SHUTDOWN:
-            print("shut system down with timeout")
-            self.communicator.send_awaiting_params_response()
-            self.INTERNAL_COMMAND_SET_SHUTDOWN_TIMEOUT = True
-
-        elif command == Constants.COMMAND_ABORT_SHUTDOWN:
-            print("system shutdown aborted")
-            self.communicator.send_successful_response()
-            os.system(WindowsCommands.SHUTDOWN_ABORT)
-
-        elif command == Constants.COMMAND_RESTART:
-            print("system restart")
-            self.communicator.send_successful_response()
-            os.system(WindowsCommands.RESTART)
-
-        elif command == Constants.COMMAND_SET_VOLUME:
-            print("set volume")
-            self.communicator.send_awaiting_params_response()
-            self.INTERNAL_COMMAND_SET_VOLUME_LEVEL = True
-
-        elif command == Constants.COMMAND_GET_VOLUME:
-            print("get volume")
-            current_volume = self.audio_controller.get_volume()
-            self.communicator.send_successful_response([current_volume])
-
-        #           elif data == NetworkConstants.COMMAND_DISCONNECT:
-        #               print('Client requsted to disconnect. Disconnecting...')
-        #               raise ConnectionAbortedError
-
     def handle_communication_error(self, error):
         pass
         print(str(error))
         print('Connection broken, waiting for host reconnection...')
         self.handle_connection()
+
+    def read_message(self, message):
+        if not message.command:
+            self.handle_empty_command()
+        elif message.command == Constants.COMMAND_PING:
+            self.handle_ping_command()
+        elif message.command == Constants.COMMAND_SHUTDOWN_NOW:
+            self.handle_shutdown_now_command()
+        elif message.command == Constants.COMMAND_SCHEDULED_SHUTDOWN:
+            self.handle_scheduled_shutdown_command(message.params)
+        elif message.command == Constants.COMMAND_ABORT_SHUTDOWN:
+            self.handle_abort_shutdown_command()
+        elif message.command == Constants.COMMAND_RESTART:
+            self.handle_restart_command()
+        elif message.command == Constants.COMMAND_SET_VOLUME:
+            self.handle_set_volume_command(message.params)
+        elif message.command == Constants.COMMAND_GET_VOLUME:
+            self.handle_get_volume_command()
+        elif message.command == Constants.COMMAND_MUTE:
+            self.handle_mute_command()
+        elif message.command == Constants.COMMAND_UNMUTE:
+            self.handle_unmute_command()
+        elif message.command == Constants.COMMAND_MOUSE_MOVE:
+            self.handle_mouse_move_command(message.params)
+
+    def handle_empty_command(self):
+        print('no data, restarting...')
+        raise ConnectionAbortedError
+
+    def handle_ping_command(self):
+        print("ping")
+        self.communicator.send_successful_response([Constants.FEEDBACK_PONG])
+
+    def handle_shutdown_now_command(self):
+        print("shut system down")
+        self.communicator.send_successful_response()
+        os.system(WindowsCommands.SHUTDOWN_NOW)
+
+    def handle_scheduled_shutdown_command(self, params):
+        print("shut system down with timeout")
+        if len(params) == 1:
+            os.system(WindowsCommands.SHUTDOWN_ABORT)
+            os.system(WindowsCommands.SCHEDULE_SHUTDOWN + params[0])
+            self.communicator.send_successful_response()
+        else:
+            self.communicator.send_unsuccessful_response()
+
+    def handle_abort_shutdown_command(self):
+        print("system shutdown aborted")
+        self.communicator.send_successful_response()
+        os.system(WindowsCommands.SHUTDOWN_ABORT)
+
+    def handle_restart_command(self):
+        print("system restart")
+        self.communicator.send_successful_response()
+        os.system(WindowsCommands.RESTART)
+
+    def handle_set_volume_command(self, params):
+        print("set volume")
+        if len(params) == 1:
+            level = int(params[0])
+            self.audio_controller.set_volume(level)
+            self.communicator.send_successful_response()
+        else:
+            self.communicator.send_unsuccessful_response()
+
+    def handle_get_volume_command(self):
+        print("get volume")
+        current_volume = self.audio_controller.get_volume()
+        is_muted = self.audio_controller.is_muted()
+        self.communicator.send_successful_response([current_volume, is_muted])
+
+    def handle_mute_command(self):
+        print("mute")
+        self.audio_controller.mute()
+        self.communicator.send_successful_response()
+
+    def handle_unmute_command(self):
+        print("unmute")
+        self.audio_controller.unmute()
+        self.communicator.send_successful_response()
+
+    def handle_mouse_move_command(self, params):
+        print("mouse move")
+        if len(params) == 2:
+            x_offset = float(params[0])
+            y_offset = float(params[1])
+            self.mouse_controller.move(x_offset, y_offset)
+        self.communicator.send_successful_response()
 
 
 if __name__ == '__main__':

@@ -25,11 +25,5 @@ class Communicator:
             Constants.ENCODING
         ))
 
-    def send_awaiting_params_response(self):
-        self.client_socket.sendall(bytearray(
-            Serializer.serialize_response(Constants.FEEDBACK_AWAITING_PARAMS, []),
-            Constants.ENCODING
-        ))
-
-    def receive_command(self):
+    def receive_message(self):
         return self.client_socket.recv(Constants.DATA_BUFFER_SIZE).decode(Constants.ENCODING)
