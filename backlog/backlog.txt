@@ -1,0 +1,9 @@
+- Wifi scanner: scan for devices in wifi network
+- Installator: installator for application and required libraries, with selectable option to autostart
+- Voice commands
+- App shortcuts: launch specific Windows apps like Firefox, Explorer etc using predefined shortcuts
+- Mouse scroll
+- Keyboard regular keys
+- Options:
+    - auto open keyboard on Keyboard Fragment
+    - mouse sensibility

@@ -1,19 +1,20 @@
+import os
 import socket
 
-from constants import Constants
-from serializer import Serializer
-from communicator import Communicator
-from message import Message
-from windows_commands import WindowsCommands
 from audio_controller import AudioController
+from communicator import Communicator
+from constants import Constants
+from keyboard_controller import KeyboardController
+from message import Message
 from mouse_controller import MouseController
-import os
+from windows_commands import WindowsCommands
 
 
 class Server:
     audio_controller = AudioController()
     communicator = Communicator()
     mouse_controller = MouseController()
+    keyboard_controller = KeyboardController()
 
     def __init__(self):
         self.connection = self.init_connection()
@@ -71,10 +72,27 @@ class Server:
             self.handle_unmute_command()
         elif message.command == Constants.COMMAND_MOUSE_MOVE:
             self.handle_mouse_move_command(message.params)
+        elif message.command == Constants.COMMAND_MOUSE_LEFT_CLICK:
+            self.handle_mouse_left_click_command()
+        elif message.command == Constants.COMMAND_MOUSE_RIGHT_CLICK:
+            self.handle_mouse_right_click_command()
+        elif message.command == Constants.COMMAND_KEYBOARD_FETCH_KEY_STATE:
+            self.handle_keyboard_fetch_state()
+        elif message.command == Constants.COMMAND_KEYBOARD_SPECIAL_KEY:
+            self.handle_keyboard_special_key_command(message.params)
+        elif message.command == Constants.COMMAND_KEYBOARD_REGULAR_KEY:
+            self.handle_keyboard_regular_key_command(message.params)
+        else:
+            self.handle_unknown_command()
 
-    def handle_empty_command(self):
+    @staticmethod
+    def handle_empty_command():
         print('no data, restarting...')
         raise ConnectionAbortedError
+
+    def handle_unknown_command(self):
+        print('unknown command')
+        self.communicator.send_unsuccessful_response()
 
     def handle_ping_command(self):
         print("ping")
@@ -137,6 +155,34 @@ class Server:
             self.mouse_controller.move(x_offset, y_offset)
         self.communicator.send_successful_response()
 
+    def handle_mouse_left_click_command(self):
+        print("mouse left click")
+        self.mouse_controller.left_click()
+        self.communicator.send_successful_response()
+
+    def handle_mouse_right_click_command(self):
+        print("mouse right click")
+        self.mouse_controller.right_click()
+        self.communicator.send_successful_response()
+
+    def handle_keyboard_special_key_command(self, params):
+        print("keyboard key")
+        if len(params) == 1:
+            key = params[0]
+            self.keyboard_controller.press_special_key(key)
+        self.communicator.send_successful_response()
+
+    def handle_keyboard_regular_key_command(self, params):
+        print("keyboard key regular")
+        if len(params) == 1:
+            key = params[0]
+            self.keyboard_controller.writeChar(key)
+        self.communicator.send_successful_response()
+
+    def handle_keyboard_fetch_state(self):
+        print("keyboard fetch state")
+        state = self.keyboard_controller.get_keys_state()
+        self.communicator.send_successful_response([state])
 
 if __name__ == '__main__':
     server = Server()

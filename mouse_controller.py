@@ -10,3 +10,11 @@ class MouseController:
 
     def move(self, x_offset: float, y_offset: float):
         pyautogui.move(x_offset * self.MOVE_FACTOR, y_offset * self.MOVE_FACTOR)
+
+    @staticmethod
+    def left_click():
+        pyautogui.leftClick()
+
+    @staticmethod
+    def right_click():
+        pyautogui.rightClick()

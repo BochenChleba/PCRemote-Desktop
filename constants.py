@@ -17,8 +17,11 @@ class Constants:
     COMMAND_MUTE = "7"
     COMMAND_UNMUTE = "8"
     COMMAND_MOUSE_MOVE = "9"
-    COMMAND_MOUSE_LEFT = "10"
-    COMMAND_MOUSE_RIGHT = "11"
+    COMMAND_MOUSE_LEFT_CLICK = "10"
+    COMMAND_MOUSE_RIGHT_CLICK = "11"
+    COMMAND_KEYBOARD_SPECIAL_KEY = "12"
+    COMMAND_KEYBOARD_REGULAR_KEY = "13"
+    COMMAND_KEYBOARD_FETCH_KEY_STATE = "14"
 
     FEEDBACK_AWAITING_PARAMS = "ready"
     FEEDBACK_SUCCEED = "ok"
@@ -26,5 +29,14 @@ class Constants:
     FEEDBACK_PONG = "pong"
     FEEDBACK_VOLUME_LEVEL = "volume"
 
+    KEY_ESC = "esc"
+    KEY_TAB = "tab"
+    KEY_SHIFT = "shift"
+    KEY_CTRL = "ctrl"
+    KEY_WINDOWS = "windows"
+    KEY_ALT = "alt"
+
     SEPARATOR = '&'
     ENCODING = 'utf-8'
+
+
