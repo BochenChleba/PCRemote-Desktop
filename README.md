@@ -11,7 +11,7 @@ Features:
   - Wifi network scan searching for target PC
 
 Requirements:
-  - Android device with [mobile-side application](https://github.com/BochenChleba/PCRemote-Mobile) installed
-  - Mobile and PC devices should be connected to the same Wifi network
+  - Android device with [mobile-side application](https://github.com/BochenChleba/PCRemote-Mobile) installed.
+  - Mobile and PC devices should be connected to the same Wifi network.
 
 todo: add video presentation
