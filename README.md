@@ -3,7 +3,7 @@ Desktop part of communication system, which allows to control Windows PC behavio
 
 [Video presentation](https://youtu.be/zZzGG5zplpQ)
 
-Communication system consists of two applications: mobile, which can be found [here](https://github.com/BochenChleba/PCRemote-Mobile) and PC (this app).
+Communication system consists of two applications: mobile, which can be found [here](https://github.com/BochenChleba/PCRemote-Mobile) and PC (this application).
 
 Features:
   - Shutting down and rebooting Windows. Command can be executed right away or at specifited time.
@@ -18,7 +18,7 @@ Requirements:
   - Python 3 installed on PC machine.
   
 Launching:
-  - make sure that desktop and mobile machines are connected to the same Wifi network.
-  - run python command in Windows CMD passing path to server.py file as an argument.
-  - launch mobile application on mobile device.
-  - connect devices by Wifi scan or by manually entering Ip address of desktop machine on mobile device.
+  - Make sure that desktop and mobile machines are connected to the same Wifi network.
+  - Run python command in Windows CMD passing path to server.py file as an argument.
+  - Launch mobile application on mobile device.
+  - Connect devices by Wifi scan or by manually entering Ip address of desktop machine on mobile device.
